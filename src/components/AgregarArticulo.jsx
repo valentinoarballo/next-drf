@@ -2,11 +2,12 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { crearArticulo } from "@/app/actions";
 
 const campo =
   "w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand focus:outline-2 focus:outline-brand/30";
 
-export default function AgregarArticulo({ endpoint }) {
+export default function AgregarArticulo() {
   const router = useRouter();
   const dialogRef = useRef(null);
   const formRef = useRef(null);
@@ -28,24 +29,13 @@ export default function AgregarArticulo({ endpoint }) {
 
     setSaving(true);
     setError("");
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (res.status === 401 || res.status === 403) {
-        setError("La API pide iniciar sesión para guardar.");
-      } else if (!res.ok) {
-        setError("No se pudo guardar. Revisa los datos: el proveedor tiene que existir.");
-      } else {
-        cerrar();
-        router.refresh();
-      }
-    } catch {
-      setError("No se pudo conectar con la API. Revisa la URL y CORS_ORIGINS.");
-    } finally {
-      setSaving(false);
+    const r = await crearArticulo(body);
+    setSaving(false);
+    if (r?.error) {
+      setError(r.error);
+    } else {
+      cerrar();
+      router.refresh();
     }
   }
 
@@ -74,7 +64,7 @@ export default function AgregarArticulo({ endpoint }) {
         }}
         className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl bg-white p-0 text-slate-800 shadow-2xl transition duration-200 backdrop:bg-ink/50 backdrop:backdrop-blur-sm open:starting:translate-y-2 open:starting:scale-95 open:starting:opacity-0"
       >
-        <form ref={formRef} onSubmit={onSubmit} autoComplete="off">
+        <form ref={formRef} onSubmit={onSubmit}>
           <div className="flex items-start justify-between gap-4 px-6 pt-6">
             <div>
               <h2 id="titulo-agregar" className="font-display text-xl font-semibold text-ink">

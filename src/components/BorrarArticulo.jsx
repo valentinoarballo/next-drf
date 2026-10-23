@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { borrarArticulo } from "@/app/actions";
 
-export default function BorrarArticulo({ id, nombre, endpoint }) {
+export default function BorrarArticulo({ id, nombre }) {
   const router = useRouter();
   const [paso, setPaso] = useState("inicio"); 
   const [error, setError] = useState("");
@@ -11,22 +12,12 @@ export default function BorrarArticulo({ id, nombre, endpoint }) {
   async function borrar() {
     setPaso("borrando");
     setError("");
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}${id}/`, {
-        method: "DELETE",
-      });
-      if (res.status === 401 || res.status === 403) {
-        setError("Sin permiso para borrar.");
-        setPaso("inicio");
-      } else if (!res.ok && res.status !== 404) {
-        setError("No se pudo borrar.");
-        setPaso("inicio");
-      } else {
-        router.refresh();
-      }
-    } catch {
-      setError("Sin conexión con la API.");
+    const r = await borrarArticulo(id);
+    if (r?.error) {
+      setError(r.error);
       setPaso("inicio");
+    } else {
+      router.refresh();
     }
   }
 
